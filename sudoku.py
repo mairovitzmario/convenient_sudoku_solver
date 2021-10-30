@@ -16,18 +16,7 @@ class ImageMethods():
     def remove_duplicate_contours(contours, poz):           # ELIMINA DUPLICATELE   
         corners = contours[poz]
         corners = corners.tolist()
-        # i=0
-        # n = len(corners)-2
-        # while i <= n:
-        #     x1 = corners[i][0][1]
-        #     x2 = corners[i+1][0][1]
-        #     y1 = corners[i][0][0]
-        #     y2 = corners[i+1][0][0]
-        #     if abs(x1-x2) <=5 and abs(y1-y2) <=5:
-        #         corners.pop(i+1)
-        #         i-=1
-        #         n-=1
-        #     i+=1
+
         xmax =-1
         ymax=-1
         xmin=1000000
