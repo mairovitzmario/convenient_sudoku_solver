@@ -29,21 +29,19 @@ class ImageMethods():
                 ymax = corner[0][0]
             if corner[0][0] < ymin:
                 ymin = corner[0][0]
-
-        corners = [xmin, xmax, ymin, ymax] 
         # AXA X -> 1; AXA Y -> 0
-        # 0 stanga sus
-        # 1 stanga jos
-        # 2 dreapta jos
-        # 3 dreapta sus
+
+        # stanga sus -> xmin, ymin
+        # stanga jos -> xmin, ymax
+        # dreapta jos -> xmax, ymax
+        # dreapta sus -> xmax, ymin
+        corners = [xmin, xmax, ymin, ymax] 
         return corners
 
 
     @staticmethod
     def read_digit(img):
         img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
-        #cv.imshow('12345', img)
-        #cv.imwrite('img.png', img)
         text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
         
         if text[0].isnumeric(): text = int(text)
