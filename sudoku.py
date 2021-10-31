@@ -18,10 +18,8 @@ class ImageMethods():
         corners = contours[poz]
         corners = corners.tolist()
 
-        xmax =-1
-        ymax=-1
-        xmin=1000000
-        ymin=1000000
+        xmax, ymax =-1, -1
+        xmin, ymin=1000000, 1000000
         for corner in corners:
             if corner[0][1] > xmax:
                 xmax = corner[0][1]
@@ -52,15 +50,17 @@ class ImageMethods():
         else: text = 0
         return text
 
-class Cell():
-    def __init__(self, x, y, index):
-        self.x = x
-        self.y = y
-        self.index = index
 
-# x
-# y
-# index  
+
+class Cell():                                           
+    # CLASA MENITA PENTRU A TINE DETALIILE IMPORTANTE ALE UNEI CELULE DIN CELE 81
+    # DESEORI FOLOSITA INTR-O LISTA :)
+    def __init__(self, x, y, index):
+        self.x = x          # COORDONATA X(MIN)
+        self.y = y          # COORDONATA Y(MIN)
+        self.index = index  # INDEXUL IN VECTORUL DE CONTURURI
+
+
 
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
@@ -73,6 +73,7 @@ class Sudoku():
      
 
     def get_edges(self, nrblur=0, nrkernel=0):
+        # ACTUALIZEAZA 
         image_aux = self.image
         if nrblur!=0:
             image_aux = cv.GaussianBlur(self.image, (3,3), 1)  
@@ -84,7 +85,6 @@ class Sudoku():
 
         self.contours, self.hierarchy = cv.findContours(canny, mode=cv.RETR_TREE, method=cv.CHAIN_APPROX_SIMPLE)
         self.hierarchy = self.hierarchy[0]
-        #cv.imshow(f'{nrkernel}',cv.resize(canny, (700,700)))
 
 
     def validate_sudoku(self):          # verifica daca exista un patrat cu 81 de copii (patrate)
@@ -112,7 +112,7 @@ class Sudoku():
         # crop image
         corners = ImageMethods.remove_duplicate_contours(self.contours, poz)   
         img = self.image  
-        if rectangle:   
+        if rectangle:   # True -> creeaza inca un patrat, False -> da crop la patratul existent
             img = img[corners[0]:corners[1], corners[2]:corners[3]]
             img = cv.rectangle(img, (0,0), (img.shape[1]-1, img.shape[0]-1), color=(0,0,0), thickness=1) #in caz ca se da crop la border
         else:
@@ -136,8 +136,13 @@ class Sudoku():
 
 
     def create_matrix(self):
-        main_square_index = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3]==-1][0]      # IA INDEXUL PATRATULUI PRINCIPAL
-        children_indexes = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3] == main_square_index] # CREEAZA O LISTA CU INDEXURILE COPIILOR PATRATULUI PRINCIPAL
+        # CREEAZA MATRICEA PT SUDOKU, REZOLVAND SI NISTE PROBLEME DIN LIBRARIA OPENCV :|
+
+        # IA INDEXUL PATRATULUI PRINCIPAL
+        main_square_index = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3]==-1][0]      
+        # CREEAZA O LISTA CU INDEXURILE CELULELOR
+        children_indexes = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3] == main_square_index] 
+        
         # ORDONAM TOATE CELULELE IN FUNCTIE DE COORDONATE, DEOARECE UNEORI OPENCV NU LE ORDONEAZA BINE
         children = [] # contine fiecare element cu coordonatele x,y si indexul sau in vectorul self.contours[]
         for child_index in children_indexes:  
@@ -152,19 +157,15 @@ class Sudoku():
             children_sample.sort(key= lambda child: child.y)
             children[9*i:9*(i+1)] = children_sample   
 
-        i, j = 0, 0 
+        #INTRODUCEM ELEMENTELE DIN FIECARE CELULA IN MATRICE
         blank = np.zeros(self.image.shape, self.image.dtype)
-        blank1 = blank
-        child = ImageMethods.remove_duplicate_contours(self.contours, children_indexes[1])
-
-        
-        for child in children:                       #INTRODUCEM ELEMENTELE DIN FIECARE PATRAT IN MATRICE
+        i, j = 0, 0 
+        for child in children:                       
             child_index = child.index
             cell_img = self.crop_image(child_index)
             self.matrix[i,j] = ImageMethods.read_digit(cell_img)
             corners = ImageMethods.remove_duplicate_contours(self.contours, child_index)
-            txt = f'{j}'
-            cv.putText(blank, txt, (corners[0]+5, corners[3]-5), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255))
+            cv.putText(blank, f'{j}', (corners[0]+5, corners[3]-5), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255))
             j+=1
             if j%9==0:
                 j=0
@@ -172,13 +173,14 @@ class Sudoku():
         cv.drawContours(blank, self.contours, -1, (0,255,0),2)
         cv.imshow('der',blank)
 
+
     def solve(self):
         pass
 
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku2.png')
+    sudoku = Sudoku('images/sudoku3.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_edge_detection()
     poz = sudoku.validate_sudoku()
@@ -196,6 +198,11 @@ def backend():
         print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
     cv.waitKey(0)
 
+
+
 if __name__ == '__main__':
     backend()
     # FA TEXT RECOGNITIONUL MAI ACCURATE
+    # erori:
+    # test 4 nu detecteaza un '1'
+    # test 5 nu detecteaza un '5'
