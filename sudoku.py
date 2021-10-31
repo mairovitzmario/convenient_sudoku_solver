@@ -1,3 +1,4 @@
+from PIL.Image import Image
 import cv2 as cv
 import numpy as np 
 import pytesseract
@@ -43,15 +44,23 @@ class ImageMethods():
     @staticmethod
     def read_digit(img):
         img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
-        cv.imshow('12345', img)
-        cv.imwrite('img.png', img)
+        #cv.imshow('12345', img)
+        #cv.imwrite('img.png', img)
         text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
         
         if text[0].isnumeric(): text = int(text)
         else: text = 0
         return text
 
-    
+class Cell():
+    def __init__(self, x, y, index):
+        self.x = x
+        self.y = y
+        self.index = index
+
+# x
+# y
+# index  
 
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
@@ -108,7 +117,7 @@ class Sudoku():
             img = cv.rectangle(img, (0,0), (img.shape[1]-1, img.shape[0]-1), color=(0,0,0), thickness=1) #in caz ca se da crop la border
         else:
             img = img[corners[0]+2:corners[1]-2, corners[2]+2:corners[3]-2]
-        cv.imshow(f'{poz}', img)
+        #cv.imshow(f'{poz}', img)
         return img
 
 
@@ -128,19 +137,40 @@ class Sudoku():
 
     def create_matrix(self):
         main_square_index = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3]==-1][0]      # IA INDEXUL PATRATULUI PRINCIPAL
-        children_indexes = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3] == main_square_index] # CREEAZA O LISTA CU INDEXURILE
-        children_indexes.sort(key=None, reverse=True)                                                           #  COPIILOR PATRATULUI
-        i=0
-        j=0
-        for child_index in children_indexes:                        #INTRODUCEM ELEMENTELE DIN FIECARE PATRAT IN MATRICE
+        children_indexes = [i for i in range(len(self.hierarchy)) if self.hierarchy[i][3] == main_square_index] # CREEAZA O LISTA CU INDEXURILE COPIILOR PATRATULUI PRINCIPAL
+        # ORDONAM TOATE CELULELE IN FUNCTIE DE COORDONATE, DEOARECE UNEORI OPENCV NU LE ORDONEAZA BINE
+        children = [] # contine fiecare element cu coordonatele x,y si indexul sau in vectorul self.contours[]
+        for child_index in children_indexes:  
+            child_coords = ImageMethods.remove_duplicate_contours(self.contours, child_index)
+            children.append(Cell(x=child_coords[0], y=child_coords[2], index=child_index))
+
+        # planul e sa ordonam toate elementele in functie de x,
+        # apoi 9 cate 9 in functie de y
+        children.sort(key= lambda child: child.x)    
+        for i in range(9):
+            children_sample = children[9*i:9*(i+1)]
+            children_sample.sort(key= lambda child: child.y)
+            children[9*i:9*(i+1)] = children_sample   
+
+        i, j = 0, 0 
+        blank = np.zeros(self.image.shape, self.image.dtype)
+        blank1 = blank
+        child = ImageMethods.remove_duplicate_contours(self.contours, children_indexes[1])
+
+        
+        for child in children:                       #INTRODUCEM ELEMENTELE DIN FIECARE PATRAT IN MATRICE
+            child_index = child.index
             cell_img = self.crop_image(child_index)
-            cv.imshow("12313131", cell_img)
             self.matrix[i,j] = ImageMethods.read_digit(cell_img)
+            corners = ImageMethods.remove_duplicate_contours(self.contours, child_index)
+            txt = f'{j}'
+            cv.putText(blank, txt, (corners[0]+5, corners[3]-5), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255))
             j+=1
             if j%9==0:
                 j=0
                 i+=1
-        
+        cv.drawContours(blank, self.contours, -1, (0,255,0),2)
+        cv.imshow('der',blank)
 
     def solve(self):
         pass
@@ -148,7 +178,7 @@ class Sudoku():
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku6.png')
+    sudoku = Sudoku('images/sudoku2.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_edge_detection()
     poz = sudoku.validate_sudoku()
@@ -168,5 +198,4 @@ def backend():
 
 if __name__ == '__main__':
     backend()
-    # REPARA TEXT RECOGNITIONUL
-    # VEZI DE CE (DACA) SE AMESTECA INTRE ELE CELULELE
+    # FA TEXT RECOGNITIONUL MAI ACCURATE
