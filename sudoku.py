@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np 
 import pytesseract
 from imagemethods import ImageMethods, Cell
+import threading
 
 
 class Sudoku():
@@ -77,13 +78,13 @@ class Sudoku():
         return False                            
 
 
-    def read_digit(self, img):
+    def read_digit(self, img, i, j):
         img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
         text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
         
         if text[0].isnumeric(): text = int(text)
         else: text = 0
-        return text
+        self.matrix[i,j] = text
 
 
     def create_matrix(self):
@@ -105,16 +106,21 @@ class Sudoku():
             cells[9*i:9*(i+1)] = cells_sample   
 
         #INTRODUCEM ELEMENTELE DIN FIECARE CELULA IN MATRICE
+        threads = []
         i, j = 0, 0 
         for cell in cells:                       
             cell_img = self.crop_image(cell.index)
-            self.matrix[i,j] = self.read_digit(cell_img)
+            t = threading.Thread( target=self.read_digit, args=[cell_img, i, j])
+            t.start()
+            threads.append(t)
             j+=1
             if j%9==0:
                 j=0
                 i+=1
-        
-        # AFISARE REZULTAT
+        for t in threads:
+            t.join()
+
+        #AFISARE REZULTAT
         blank = np.zeros(self.image.shape, self.image.dtype)
         i, j = 0, 0 
         for cell in cells:
@@ -136,7 +142,7 @@ class Sudoku():
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku3.png')
+    sudoku = Sudoku('images/sudoku2.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
