@@ -1,62 +1,7 @@
 import cv2 as cv
 import numpy as np 
 import pytesseract
-
-class ImageMethods():
-    TESSERACT_CONFIG = '--oem 3 --psm 6 outputbase digits'   
-
-    @staticmethod
-    def get_shape(contour):                                 
-        # RETURNEAZA NUMARUL DE COLTURI
-        perimeter = cv.arcLength(contour, True)
-        points_number = cv.approxPolyDP(contour, 0.02 * perimeter, True)
-        return len(points_number)       
-
-
-    @staticmethod
-    def remove_duplicate_contours(contours, poz):           
-        corners = contours[poz]
-        corners = corners.tolist()
-
-        xmax, ymax =-1, -1
-        xmin, ymin=1000000, 1000000
-        for corner in corners:
-            if corner[0][1] > xmax:
-                xmax = corner[0][1]
-            if corner[0][1] < xmin:
-                xmin = corner[0][1]
-            if corner[0][0] > ymax:
-                ymax = corner[0][0]
-            if corner[0][0] < ymin:
-                ymin = corner[0][0]
-        # AXA X -> 1; AXA Y -> 0
-
-        # stanga sus -> xmin, ymin
-        # stanga jos -> xmin, ymax
-        # dreapta jos -> xmax, ymax
-        # dreapta sus -> xmax, ymin
-        corners = [xmin, xmax, ymin, ymax] 
-        return corners
-
-
-    @staticmethod
-    def read_digit(img):
-        img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
-        text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
-        
-        if text[0].isnumeric(): text = int(text)
-        else: text = 0
-        return text
-
-
-
-class Cell():                                           
-    # CLASA MENITA PENTRU A TINE DETALIILE IMPORTANTE ALE UNEI CELULE DIN CELE 81
-    def __init__(self, x, y, index):
-        self.x = x          # COORDONATA X(MIN)
-        self.y = y          # COORDONATA Y(MIN)
-        self.index = index  # INDEXUL IN VECTORUL DE CONTURURI
-
+from imagemethods import ImageMethods, Cell
 
 
 class Sudoku():
@@ -132,6 +77,15 @@ class Sudoku():
         return False                            
 
 
+    def read_digit(self, img):
+        img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
+        text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
+        
+        if text[0].isnumeric(): text = int(text)
+        else: text = 0
+        return text
+
+
     def create_matrix(self):
         # CREEAZA MATRICEA PT SUDOKU, REZOLVAND SI NISTE PROBLEME DIN LIBRARIA OPENCV :|
 
@@ -151,18 +105,17 @@ class Sudoku():
             cells[9*i:9*(i+1)] = cells_sample   
 
         #INTRODUCEM ELEMENTELE DIN FIECARE CELULA IN MATRICE
-        blank = np.zeros(self.image.shape, self.image.dtype)
         i, j = 0, 0 
         for cell in cells:                       
-            cell_index = cell.index
-            cell_img = self.crop_image(cell_index)
-            self.matrix[i,j] = ImageMethods.read_digit(cell_img)
+            cell_img = self.crop_image(cell.index)
+            self.matrix[i,j] = self.read_digit(cell_img)
             j+=1
             if j%9==0:
                 j=0
                 i+=1
         
         # AFISARE REZULTAT
+        blank = np.zeros(self.image.shape, self.image.dtype)
         i, j = 0, 0 
         for cell in cells:
             cell_index = cell.index
@@ -183,7 +136,7 @@ class Sudoku():
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku1.png')
+    sudoku = Sudoku('images/sudoku3.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
