@@ -12,7 +12,7 @@ class Sudoku():
         self.contours = contours                            # CONTURURILE GASITE IN IMAGINE
         self.hierarchy = hierarchy                          # [Next, Previous, First_Child, Parent]
         self.matrix = matrix                                # MATRICEA JOCULUI
-        pytesseract.pytesseract.tesseract_cmd = r'E:\Fisiere\code\Useful\pytesseract\tesseract.exe'
+        pytesseract.pytesseract.tesseract_cmd = 'pytesseract/tesseract.exe'
      
 
     def get_edges(self, nrblur=0, nrkernel=0):
