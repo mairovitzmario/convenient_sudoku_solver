@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np 
 import pytesseract
-
+    
 
 class ImageMethods():
     #TESSERACT_CONFIG = '--oem 3 --psm 6 outputbase digits'   
