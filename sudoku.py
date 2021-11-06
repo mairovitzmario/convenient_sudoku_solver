@@ -3,7 +3,7 @@ import numpy as np
 import pytesseract
 from imagemethods import ImageMethods, Cell
 import threading
-
+import multiprocessing
 
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
@@ -78,13 +78,25 @@ class Sudoku():
         return False                            
 
 
-    def read_digit(self, img, i, j):
+    def read_digit(self, cell_contour_index, i, j):
+        # prelucram imaginea celulei, apoi citim textul din ea
+        img = self.crop_image(cell_contour_index)
         img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
+        resize_multiplier = cv.contourArea(self.contours[cell_contour_index]) / 2000                # 2000 -> 1.0 multiplier
+        resize_multiplier = 1 / resize_multiplier
+        #resize_multiplier = 1
+        if resize_multiplier > 1.5: resize_multiplier = 1.5
+        if resize_multiplier < 0.5 : resize_multiplier = 0.5
+        #print(resize_multiplier)
+
+        img = cv.resize(img, None, fx=resize_multiplier, fy=resize_multiplier, interpolation=cv.INTER_CUBIC)
         text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
         
-        if text[0].isnumeric(): text = int(text)
+        if text[0].isnumeric(): text = int(text[0])
         else: text = 0
-        self.matrix[i,j] = text
+
+        self.matrix[i,j] = int(text)
+ 
 
 
     def create_matrix(self):
@@ -109,8 +121,9 @@ class Sudoku():
         threads = []
         i, j = 0, 0 
         for cell in cells:                       
-            cell_img = self.crop_image(cell.index)
-            t = threading.Thread( target=self.read_digit, args=[cell_img, i, j])
+            #print(cv.contourArea(self.contours[cell.index]))
+            #cv.imshow(f'{9*i+j}', cell_img)
+            t = threading.Thread( target=self.read_digit, args=[cell.index, i, j])
             t.start()
             threads.append(t)
             j+=1
@@ -122,17 +135,18 @@ class Sudoku():
 
         #AFISARE REZULTAT
         blank = np.zeros(self.image.shape, self.image.dtype)
+        cv.drawContours(blank, self.contours, -1, (255,0,0),2)
         i, j = 0, 0 
         for cell in cells:
             cell_index = cell.index
             corners = ImageMethods.remove_duplicate_contours(self.contours, cell_index)
-            cv.putText(blank, f'{self.matrix[j,i]}', (corners[0]+5, corners[3]-5), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255))
+            if self.matrix[j,i]: cv.putText(blank, f'{self.matrix[j,i]}', (corners[0]+5, corners[3]-5), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255))
             j+=1
             if j%9==0:
                 j=0
                 i+=1
 
-        cv.drawContours(blank, self.contours, -1, (0,255,0),2)
+        
         cv.imshow('der',blank)
 
 
@@ -142,7 +156,7 @@ class Sudoku():
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku2.png')
+    sudoku = Sudoku('images/sudoku1.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
@@ -164,7 +178,12 @@ def backend():
 
 if __name__ == '__main__':
     backend()
-    # FA TEXT RECOGNITIONUL MAI ACCURATE
-    # erori:
-    # test 4 nu detecteaza un '1'
-    # test 5 nu detecteaza un '5'
+    # POSIBILA EROARE:
+    # IMAGINEA SE DILATEAZA AUTOMAT ( DILATAREA INCEPE DE LA 1, NU DE LA 0 )
+    # DE CE NU CRED CA TB REPARAT:
+    # DACA IMAGINEA ESTE ATAT DE INGHESUITA INCAT NU RECUNOASTE SUDOKU DE LA KERNEL 1 PT DILATARE,
+    # ATUNCI PROBABIL NU AR RECUNOASTE FIDEL TEXTUL
+    # DAR NU STIU EXACT
+    # VAD EU MAINE
+    # NU CRED CA VAD MAINE NMK
+    # SPER SA FACEM ONLINE
