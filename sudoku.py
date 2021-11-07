@@ -155,7 +155,8 @@ class Sudoku():
 
 
 def backend():
-    sudoku = Sudoku('images/sudoku1.png')
+    image_name = input()
+    sudoku = Sudoku(f'images/{image_name}.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
