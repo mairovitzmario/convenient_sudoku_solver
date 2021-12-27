@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np 
 import pytesseract
 from imagemethods import ImageMethods, Cell
+import backtracking
 import threading
 
 class Sudoku():
@@ -150,12 +151,13 @@ class Sudoku():
 
 
     def solve(self):
-        pass
-
+        solve_sudoku = backtracking.Solve(self.matrix)
+        solve_sudoku.backtracking()
+        self.matrix = solve_sudoku.get_result()
 
 
 def backend():
-    image_name = input()
+    image_name = 'sudoku11'
     sudoku = Sudoku(f'images/{image_name}.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
@@ -170,6 +172,11 @@ def backend():
             cv.imshow('d',sudoku.image)
             sudoku.create_matrix()
             print(sudoku.matrix)
+            print('..........................')
+            sudoku.solve()
+            print(sudoku.matrix)
+            
+
     else:
         print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
     cv.waitKey(0)
@@ -183,3 +190,6 @@ if __name__ == '__main__':
     # DE CE NU CRED CA TB REPARAT:
     # DACA IMAGINEA ESTE ATAT DE INGHESUITA INCAT NU RECUNOASTE SUDOKU DE LA KERNEL 1 PT DILATARE,
     # ATUNCI PROBABIL NU AR RECUNOASTE FIDEL TEXTUL
+    # AR FI O SOLUTIE SA DAU STRETCH LA IMAGINE (DE LA INCEPUT) LA O POZITIE FINALA RELATIVA
+    # DA E PREA MULTA BATAIE DE CAP SI N ARE ROST PT ATESTATUL ASTA
+    # MAJORITATEA EXEMPLELOR MERG BN
