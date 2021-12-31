@@ -7,11 +7,13 @@ import threading
 
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
-                    matrix=np.zeros(shape=(9,9), dtype='int')):
+                    matrix=np.zeros(shape=(9,9), dtype='int'),
+                    solved_matrix=np.zeros(shape=(9,9), dtype='int')):
         self.image = cv.imread(image)                       # LUAM IMAGINEA DIN PATH
         self.contours = contours                            # CONTURURILE GASITE IN IMAGINE
         self.hierarchy = hierarchy                          # [Next, Previous, First_Child, Parent]
         self.matrix = matrix                                # MATRICEA JOCULUI
+        self.solved_matrix = solved_matrix
         pytesseract.pytesseract.tesseract_cmd = 'dependencies/pytesseract/tesseract.exe'
      
 
@@ -151,13 +153,15 @@ class Sudoku():
 
 
     def solve(self):
-        solve_sudoku = backtracking.Solve(self.matrix)
-        solve_sudoku.backtracking()
-        self.matrix = solve_sudoku.get_result()
+        solver_sudoku = backtracking.Solver(self.matrix)
+        print(solver_sudoku.solve_sudoku())
+        self.solved_matrix = solver_sudoku.puzzle
+
+
 
 
 def backend():
-    image_name = 'sudoku11'
+    image_name = 'sudoku4'
     sudoku = Sudoku(f'images/{image_name}.png')
     cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
@@ -173,9 +177,8 @@ def backend():
             sudoku.create_matrix()
             print(sudoku.matrix)
             print('..........................')
-            sudoku.solve()
-            print(sudoku.matrix)
-            
+            sudoku.solve()       
+            print(sudoku.solved_matrix)     
 
     else:
         print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
