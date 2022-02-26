@@ -8,12 +8,13 @@ import threading
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
                     matrix=np.zeros(shape=(9,9), dtype='int'),
-                    solved_matrix=np.zeros(shape=(9,9), dtype='int')):
+                    solved_matrix=np.zeros(shape=(9,9), dtype='int'), solved_image=cv.imread(f'dependencies/sudoku_grid.png')):
         self.image = cv.imread(image)                       # LUAM IMAGINEA DIN PATH
         self.contours = contours                            # CONTURURILE GASITE IN IMAGINE
         self.hierarchy = hierarchy                          # [Next, Previous, First_Child, Parent]
         self.matrix = matrix                                # MATRICEA JOCULUI
         self.solved_matrix = solved_matrix
+        self.solved_image = solved_image
         pytesseract.pytesseract.tesseract_cmd = 'dependencies/pytesseract/tesseract.exe'
      
 
@@ -149,21 +150,37 @@ class Sudoku():
                 i+=1
 
         
-        cv.imshow('der',blank)
+        #cv.imshow('der',blank)
 
 
     def solve(self):
         solver_sudoku = backtracking.Solver(self.matrix)
-        print(solver_sudoku.solve_sudoku())
+        solver_sudoku.solve_sudoku()
+        #print(solver_sudoku.solve_sudoku())
         self.solved_matrix = solver_sudoku.puzzle
 
+    def create_solved_image(self):
+        self.solved_image=cv.imread(f'dependencies/sudoku_grid.png')
+        column_height, row_length = 46,10
+        for row in self.solved_matrix:
+            row_text = ""
+            for digit in row:
+                row_text+= str(digit) + " "
+            cv.putText(img=self.solved_image, text=row_text, org=(row_length, column_height) ,fontFace=cv.FONT_HERSHEY_DUPLEX , fontScale=1.4, color=(0,0,0) )
+
+            column_height+=46
+            if column_height>100:
+                column_height+=1
+            #cv.imshow(f"{column_height} +  {row_length}",self.solved_image)
 
 
 
-def backend():
-    image_name = 'sudoku4'
-    sudoku = Sudoku(f'images/{image_name}.png')
-    cv.imshow('test',sudoku.image)
+
+
+def backend(image_name):
+    sudoku = Sudoku(image_name)
+    #sudoku = Sudoku(f'images/{image_name}.png')
+    #cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
     if poz!=-1:
@@ -173,21 +190,29 @@ def backend():
         ok = sudoku.validate_sudoku()
         
         if ok!=-1:
-            cv.imshow('d',sudoku.image)
+            #cv.imshow('d',sudoku.image)
             sudoku.create_matrix()
-            print(sudoku.matrix)
-            print('..........................')
+            #print(sudoku.matrix)
+            #print('..........................')
             sudoku.solve()       
-            print(sudoku.solved_matrix)     
+            sudoku.create_solved_image()
+            #print(sudoku.solved_matrix)
+            cv.imshow(f"{image_name}",sudoku.solved_image)
+            cv.waitKey(0)  
+            return sudoku.solved_matrix     
+        else:
+            return 'sudoku_invalid'
+            #print('SUDOKU NU POATE FI REZOLVAT!')
 
     else:
-        print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
-    cv.waitKey(0)
+        return 'image_invalid'
+        #print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
+    #cv.waitKey(0)
 
 
 
 if __name__ == '__main__':
-    backend()
+    print(backend(f'images/sudoku1.png'))
     # POSIBILA EROARE:
     # IMAGINEA SE DILATEAZA AUTOMAT ( DILATAREA INCEPE DE LA 1, NU DE LA 0 )
     # DE CE NU CRED CA TB REPARAT:
