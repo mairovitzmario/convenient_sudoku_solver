@@ -29,6 +29,7 @@ class Sudoku():
             kernel = np.ones((nrkernel,nrkernel))                             
             canny = cv.dilate(canny, kernel)                       
 
+        #cv.imshow(f'{nrkernel}, {nrblur}', canny)
         self.contours, self.hierarchy = cv.findContours(canny, mode=cv.RETR_TREE, method=cv.CHAIN_APPROX_SIMPLE)
         self.hierarchy = self.hierarchy[0]
 

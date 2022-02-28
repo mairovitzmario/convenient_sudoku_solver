@@ -1,1 +1,1 @@
-pyinstaller --onefile --paths="C:\Users\mario\AppData\Local\Programs\Python\Python39\lib\site-packages\cv2" sudoku.py
+pyinstaller --onefile --paths="C:\Users\mario\AppData\Local\Programs\Python\Python39\lib\site-packages\cv2" gui.py --windowed
