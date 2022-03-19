@@ -82,22 +82,25 @@ class Sudoku():
         return False                            
 
 
-    def read_digit(self, cell_contour_index, i, j):
+    def read_digit(self, cell_contour_index, i, j, is_empty):
         # prelucram imaginea celulei, apoi citim textul din ea
-        img = self.crop_image(cell_contour_index)
-        img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
-        resize_multiplier = cv.contourArea(self.contours[cell_contour_index]) / 2000                # 2000 -> 1.0 multiplier
-        resize_multiplier = 1 / resize_multiplier
-        #resize_multiplier = 1
-        if resize_multiplier > 1.5: resize_multiplier = 1.5
-        if resize_multiplier < 0.5 : resize_multiplier = 0.5
-        #print(resize_multiplier)
+        if is_empty:
+            text = 0
+        else:
+            img = self.crop_image(cell_contour_index)
+            img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
+            resize_multiplier = cv.contourArea(self.contours[cell_contour_index]) / 2000                # 2000 -> 1.0 multiplier
+            resize_multiplier = 1 / resize_multiplier
+            #resize_multiplier = 1
+            if resize_multiplier > 1.5: resize_multiplier = 1.5
+            if resize_multiplier < 0.5 : resize_multiplier = 0.5
+            #print(resize_multiplier)
 
-        img = cv.resize(img, None, fx=resize_multiplier, fy=resize_multiplier, interpolation=cv.INTER_CUBIC)
-        text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
-        
-        if text[0].isnumeric(): text = int(text[0])
-        else: text = 0
+            img = cv.resize(img, None, fx=resize_multiplier, fy=resize_multiplier, interpolation=cv.INTER_CUBIC)
+            text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
+            
+            if text[0].isnumeric(): text = int(text[0])
+            else: text = 0
 
         self.matrix[i,j] = int(text)
  
@@ -113,21 +116,22 @@ class Sudoku():
         cells = [] 
         for cell_index in cells_indexes:  
             cell_coords = ImageMethods.remove_duplicate_contours(self.contours, cell_index)
-            cells.append(Cell(x=cell_coords[0], y=cell_coords[2], index=cell_index))
+            cells.append(Cell(xmin=cell_coords[0], ymin=cell_coords[2], xmax=cell_coords[1], ymax=cell_coords[3], index=cell_index))
 
-        cells.sort(key= lambda cell: cell.x)    
+        cells.sort(key= lambda cell: cell.xmin)    
         for i in range(9):
             cells_sample = cells[9*i:9*(i+1)]
-            cells_sample.sort(key= lambda cell: cell.y)
+            cells_sample.sort(key= lambda cell: cell.ymin)
             cells[9*i:9*(i+1)] = cells_sample   
 
         #INTRODUCEM ELEMENTELE DIN FIECARE CELULA IN MATRICE
         threads = []
         i, j = 0, 0 
+        nr=0
         for cell in cells:                       
             #print(cv.contourArea(self.contours[cell.index]))
             #cv.imshow(f'{9*i+j}', cell_img)
-            t = threading.Thread( target=self.read_digit, args=[cell.index, i, j])
+            t = threading.Thread( target=self.read_digit, args=[cell.index, i, j, cell.detect_empty(self.image)])
             t.start()
             threads.append(t)
             j+=1
@@ -149,8 +153,7 @@ class Sudoku():
             if j%9==0:
                 j=0
                 i+=1
-
-        
+        print(nr)
         #cv.imshow('der',blank)
 
 
@@ -199,7 +202,7 @@ def backend(image_name):
             sudoku.create_solved_image()
             #print(sudoku.solved_matrix)
             cv.imshow(f"{image_name}",sudoku.solved_image)
-            cv.waitKey(0)  
+            #cv.waitKey(0)  CV WAIT KEY AR100AR
             return sudoku.solved_matrix     
         else:
             return 'sudoku_invalid'
@@ -214,6 +217,17 @@ def backend(image_name):
 
 if __name__ == '__main__':
     print(backend(f'images/sudoku1.png'))
+    print(backend(f'images/sudoku2.png'))
+    print(backend(f'images/sudoku3.png'))
+    print(backend(f'images/sudoku4.jpg'))
+    print(backend(f'images/sudoku5.png'))
+    print(backend(f'images/sudoku6.png'))
+    print(backend(f'images/sudoku7.png'))
+    print(backend(f'images/sudoku8.png'))
+    print(backend(f'images/sudoku9.png'))
+    print(backend(f'images/sudoku10.png'))
+
+    #204
     # POSIBILA EROARE:
     # IMAGINEA SE DILATEAZA AUTOMAT ( DILATAREA INCEPE DE LA 1, NU DE LA 0 )
     # DE CE NU CRED CA TB REPARAT:
