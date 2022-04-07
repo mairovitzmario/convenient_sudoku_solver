@@ -140,7 +140,7 @@ class Sudoku():
                 i+=1
         for t in threads:
             t.join()
-
+            
         #AFISARE REZULTAT
         blank = np.zeros(self.image.shape, self.image.dtype)
         cv.drawContours(blank, self.contours, -1, (255,0,0),2)
@@ -179,8 +179,6 @@ class Sudoku():
 
 
 
-
-
 def backend(image_name):
     sudoku = Sudoku(image_name)
     #sudoku = Sudoku(f'images/{image_name}.png')
@@ -202,7 +200,7 @@ def backend(image_name):
             sudoku.create_solved_image()
             #print(sudoku.solved_matrix)
             cv.imshow(f"{image_name}",sudoku.solved_image)
-            #cv.waitKey(0)  CV WAIT KEY AR100AR
+            cv.waitKey(0) 
             return sudoku.solved_matrix     
         else:
             return 'sudoku_invalid'
@@ -227,7 +225,6 @@ if __name__ == '__main__':
     print(backend(f'images/sudoku9.png'))
     print(backend(f'images/sudoku10.png'))
 
-    #204
     # POSIBILA EROARE:
     # IMAGINEA SE DILATEAZA AUTOMAT ( DILATAREA INCEPE DE LA 1, NU DE LA 0 )
     # DE CE NU CRED CA TB REPARAT:
@@ -235,4 +232,4 @@ if __name__ == '__main__':
     # ATUNCI PROBABIL NU AR RECUNOASTE FIDEL TEXTUL
     # AR FI O SOLUTIE SA DAU STRETCH LA IMAGINE (DE LA INCEPUT) LA O POZITIE FINALA RELATIVA
     # DA E PREA MULTA BATAIE DE CAP SI N ARE ROST PT ATESTATUL ASTA
-    # MAJORITATEA EXEMPLELOR MERG BN
+    # TOATE EXEMPLELE MERG BN
