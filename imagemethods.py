@@ -47,8 +47,8 @@ class ImageMethods():
 class Cell():                                           
     # CLASA MENITA PENTRU A TINE DETALIILE IMPORTANTE ALE UNEI CELULE DIN CELE 81
     def __init__(self, xmin, ymin, xmax, ymax, index):
-        self.xmin = xmin          # COORDONATA X(MIN)
-        self.ymin = ymin          # COORDONATA Y(MIN)
+        self.xmin = xmin        
+        self.ymin = ymin          
         self.xmax = xmax
         self.ymax = ymax
         self.index = index  # INDEXUL IN VECTORUL DE CONTURURI
@@ -63,3 +63,4 @@ class Cell():
                     return False
         
         return True
+

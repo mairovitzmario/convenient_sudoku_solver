@@ -7,7 +7,7 @@ from tkinter.messagebox import showinfo, showwarning
 from PIL import Image, ImageTk
 import sudoku
 
-# create the root window
+
 root = tk.Tk()
 root.title('Convenient Sudoku Solver')
 root.resizable(False, False)
@@ -30,8 +30,6 @@ def select_file():
 		initialdir = '/',
 		filetypes=filetypes
 	)
-
-	
 
 	print(filename)
 	if filename: 
@@ -94,7 +92,6 @@ empty_label = ttk.Label(root,text = "",	padding = 10)
 
 
 
-#ttk.Label(root,text = "",padding = 2).grid(row=0,column=0)
 title_label.place(x=62,y=0)
 open_button.place(x=75,y=190)
 help_button.place(x=205,y=190)
@@ -102,5 +99,4 @@ help_button.place(x=205,y=190)
 
 
 
-# run the application
 root.mainloop()

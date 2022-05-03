@@ -8,7 +8,8 @@ import threading
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
                     matrix=np.zeros(shape=(9,9), dtype='int'),
-                    solved_matrix=np.zeros(shape=(9,9), dtype='int'), solved_image=cv.imread(f'dependencies/sudoku_grid.png')):
+                    solved_matrix=np.zeros(shape=(9,9), dtype='int'), 
+                    solved_image=cv.imread(f'dependencies/sudoku_grid.png')):
         self.image = cv.imread(image)                       # LUAM IMAGINEA DIN PATH
         self.contours = contours                            # CONTURURILE GASITE IN IMAGINE
         self.hierarchy = hierarchy                          # [Next, Previous, First_Child, Parent]
@@ -29,8 +30,8 @@ class Sudoku():
             kernel = np.ones((nrkernel,nrkernel))                             
             canny = cv.dilate(canny, kernel)                       
 
-        #cv.imshow(f'{nrkernel}, {nrblur}', canny)
-        self.contours, self.hierarchy = cv.findContours(canny, mode=cv.RETR_TREE, method=cv.CHAIN_APPROX_SIMPLE)
+        self.contours, self.hierarchy = cv.findContours(canny, 
+             mode=cv.RETR_TREE, method=cv.CHAIN_APPROX_SIMPLE)
         self.hierarchy = self.hierarchy[0]
 
 
@@ -51,7 +52,6 @@ class Sudoku():
                 if area > max_area:
                     max_area = area
                     poz = i
-
         return poz          # daca poz == -1 e invalid
                             # daca poz >= 0 e valid
 
@@ -89,7 +89,7 @@ class Sudoku():
         else:
             img = self.crop_image(cell_contour_index)
             img = cv.cvtColor(img, code=cv.COLOR_BGR2GRAY)
-            resize_multiplier = cv.contourArea(self.contours[cell_contour_index]) / 2000                # 2000 -> 1.0 multiplier
+            resize_multiplier = cv.contourArea(self.contours[cell_contour_index]) / 2000  # 2000 -> 1.0 multiplier
             resize_multiplier = 1 / resize_multiplier
             #resize_multiplier = 1
             if resize_multiplier > 1.5: resize_multiplier = 1.5
@@ -129,8 +129,6 @@ class Sudoku():
         i, j = 0, 0 
         nr=0
         for cell in cells:                       
-            #print(cv.contourArea(self.contours[cell.index]))
-            #cv.imshow(f'{9*i+j}', cell_img)
             t = threading.Thread( target=self.read_digit, args=[cell.index, i, j, cell.detect_empty(self.image)])
             t.start()
             threads.append(t)
@@ -153,7 +151,6 @@ class Sudoku():
             if j%9==0:
                 j=0
                 i+=1
-        print(nr)
         #cv.imshow('der',blank)
 
 
@@ -181,8 +178,6 @@ class Sudoku():
 
 def backend(image_name):
     sudoku = Sudoku(image_name)
-    #sudoku = Sudoku(f'images/{image_name}.png')
-    #cv.imshow('test',sudoku.image)
     sudoku.automatic_get_edges()
     poz = sudoku.validate_sudoku()
     if poz!=-1:
@@ -192,24 +187,17 @@ def backend(image_name):
         ok = sudoku.validate_sudoku()
         
         if ok!=-1:
-            #cv.imshow('d',sudoku.image)
             sudoku.create_matrix()
             #print(sudoku.matrix)
-            #print('..........................')
             sudoku.solve()       
             sudoku.create_solved_image()
-            #print(sudoku.solved_matrix)
             cv.imshow(f"{image_name}",sudoku.solved_image)
             cv.waitKey(0) 
             return sudoku.solved_matrix     
         else:
             return 'sudoku_invalid'
-            #print('SUDOKU NU POATE FI REZOLVAT!')
-
     else:
         return 'image_invalid'
-        #print('IMAGINE INVALIDA! INCARCATI O ALTA IMAGINE.')
-    #cv.waitKey(0)
 
 
 
@@ -224,12 +212,3 @@ if __name__ == '__main__':
     print(backend(f'images/sudoku8.png'))
     print(backend(f'images/sudoku9.png'))
     print(backend(f'images/sudoku10.png'))
-
-    # POSIBILA EROARE:
-    # IMAGINEA SE DILATEAZA AUTOMAT ( DILATAREA INCEPE DE LA 1, NU DE LA 0 )
-    # DE CE NU CRED CA TB REPARAT:
-    # DACA IMAGINEA ESTE ATAT DE INGHESUITA INCAT NU RECUNOASTE SUDOKU DE LA KERNEL 1 PT DILATARE,
-    # ATUNCI PROBABIL NU AR RECUNOASTE FIDEL TEXTUL
-    # AR FI O SOLUTIE SA DAU STRETCH LA IMAGINE (DE LA INCEPUT) LA O POZITIE FINALA RELATIVA
-    # DA E PREA MULTA BATAIE DE CAP SI N ARE ROST PT ATESTATUL ASTA
-    # TOATE EXEMPLELE MERG BN

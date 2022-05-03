@@ -45,3 +45,5 @@ class Solver:
             self.puzzle[row][col] = 0
 
         return False
+
+        
