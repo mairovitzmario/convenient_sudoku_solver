@@ -1,9 +1,9 @@
 import cv2 as cv
 import numpy as np 
-import pytesseract
 from imagemethods import ImageMethods, Cell
 import backtracking
 import threading
+import subprocess
 
 class Sudoku():
     def __init__(self, image, contours=None, hierarchy=None, 
@@ -16,7 +16,7 @@ class Sudoku():
         self.matrix = matrix                                # MATRICEA JOCULUI
         self.solved_matrix = solved_matrix
         self.solved_image = solved_image
-        pytesseract.pytesseract.tesseract_cmd = 'dependencies/pytesseract/tesseract.exe'
+        
      
 
     def get_edges(self, nrblur=0, nrkernel=0):
@@ -97,11 +97,16 @@ class Sudoku():
             #print(resize_multiplier)
 
             img = cv.resize(img, None, fx=resize_multiplier, fy=resize_multiplier, interpolation=cv.INTER_CUBIC)
-            text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
-            
-            if text[0].isnumeric(): text = int(text[0])
-            else: text = 0
-
+            #text = pytesseract.image_to_string(image=img, config='--psm 6 digits')
+            try:
+                result = subprocess.run(['tesseract', 'stdin', 'stdout', '--psm', '6', 'digits'], 
+                        input=cv.imencode('.png', img)[1].tobytes(), 
+                        capture_output=True)
+                text = result.stdout.decode('utf-8').strip()
+                if text[0].isnumeric(): text = int(text[0])
+                else: text = 0
+            except Exception as e:
+                text = 0
         self.matrix[i,j] = int(text)
  
 
@@ -193,22 +198,19 @@ def backend(image_name):
             sudoku.create_solved_image()
             cv.imshow(f"{image_name}",sudoku.solved_image)
             cv.waitKey(0) 
+            cv.destroyAllWindows()
             return sudoku.solved_matrix     
         else:
-            return 'sudoku_invalid'
+            raise Exception('sudoku_invalid')
     else:
-        return 'image_invalid'
+        raise Exception('image_invalid')
 
 
 
 if __name__ == '__main__':
-    print(backend(f'images/sudoku1.png'))
-    print(backend(f'images/sudoku2.png'))
-    print(backend(f'images/sudoku3.png'))
-    print(backend(f'images/sudoku4.jpg'))
-    print(backend(f'images/sudoku5.png'))
-    print(backend(f'images/sudoku6.png'))
-    print(backend(f'images/sudoku7.png'))
-    print(backend(f'images/sudoku8.png'))
-    print(backend(f'images/sudoku9.png'))
-    print(backend(f'images/sudoku10.png'))
+    for i in range(1, 11):
+        print(f'Processing sudoku{i}...')
+        try:
+            backend(f'images/sudoku{i}.png')
+        except Exception as e:
+            backend(f'images/sudoku{i}.jpg')

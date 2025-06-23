@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 import sudoku
 
 
+
 root = tk.Tk()
 root.title('Convenient Sudoku Solver')
 root.resizable(False, False)
@@ -32,15 +33,17 @@ def select_file():
 	)
 
 	print(filename)
+	
+	
 	if filename: 
 		root.withdraw()
-		outcome = sudoku.backend(filename)
-
-	
-	if outcome == 'sudoku_invalid':
-		showwarning(title=f'{outcome}', message='Puzzle-ul nu are solutii')
-	elif outcome == 'image_invalid':
-		showwarning(title=f'{outcome}', message='Nu a fost detectat un puzzle sudoku in imagine')
+		try:
+			outcome = sudoku.backend(filename)
+		except Exception as e:
+			if str(e) == 'sudoku_invalid':
+				showwarning(title=f'{outcome}', message='Puzzle-ul nu are solutii')
+			elif str(e) == 'image_invalid':
+				showwarning(title=f'{outcome}', message='Nu a fost detectat un puzzle sudoku in imagine')
 
 	root.deiconify()
 	
